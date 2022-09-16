@@ -20,9 +20,10 @@ class _CategoryScreenState extends State<CategoryScreen> {
   var category = Category();
   var cateservice = CategoryService();
   var _category;
+  var currentindex;
 
   List<Category> categorylist = <Category>[];
-
+  final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
   void initState() {
     super.initState();
     getAllCate();
@@ -35,21 +36,23 @@ class _CategoryScreenState extends State<CategoryScreen> {
         var cateModel = Category();
         cateModel.name = category['name'];
         cateModel.description = category['description'];
-        cateModel.id=category['id'];
+        cateModel.id = category['id'];
         categorylist.add(cateModel);
       });
     });
   }
 
-  getCatebyId(BuildContext context,cateroryId) async
-  {
+  getCatebyId(BuildContext context, cateroryId) async {
     _category = await cateservice.loadCatebyId(cateroryId);
-    setState((){
-      editcategoryName.text=_category[0]['name']??'No Name';
-      editcategoryDes.text=_category[0]['description']??'No Des';
-
+    setState(() {
+      editcategoryName.text = _category[0]['name'] ?? 'No Name';
+      editcategoryDes.text = _category[0]['description'] ?? 'No Des';
     });
     showEditFormDialog(context);
+  }
+
+  deleteCatebyId(BuildContext context) async {
+    cateservice.deleteCatebyId(categorylist[currentindex].id);
   }
 
   showFormDialog(BuildContext buildContext) {
@@ -68,16 +71,14 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 onPressed: () async {
                   category.name = categoryName.text;
                   category.description = categoryDes.text;
-                  category.id=categorylist.length+1;
-                  var resutl=await cateservice.saveCategory(category);
-                  if(resutl>0)
-                  {
+                  category.id = categorylist.last.id + 1;
+                  var resutl = await cateservice.saveCategory(category);
+                  if (resutl > 0) {
                     Navigator.pop(context);
-                    setState((){
+                    setState(() {
                       categorylist.add(category);
                     });
                   }
-
                 },
                 child: const Text('Save'),
                 color: Colors.blue,
@@ -103,6 +104,38 @@ class _CategoryScreenState extends State<CategoryScreen> {
           );
         });
   }
+
+  showDeleteFormDialog(BuildContext buildContext) {
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (param) {
+          return AlertDialog(
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+                color: Colors.red,
+              ),
+              FlatButton(
+                onPressed: () {
+                  deleteCatebyId(context);
+                  Navigator.pop(context);
+                  setState(() {
+                    print(currentindex);
+                    categorylist.remove(currentindex);
+                    showSuccessSnackbar(Text('Delete successfull'));
+                  });
+                },
+                child: const Text('Delete'),
+                color: Colors.blue,
+              ),
+            ],
+            title: Text('Delete Category Form'),
+          );
+        });
+  }
+
   showEditFormDialog(BuildContext buildContext) {
     return showDialog(
         context: context,
@@ -117,19 +150,20 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ),
               FlatButton(
                 onPressed: () async {
-                  category.id=_category[0]['id'];
+                  category.id = _category[0]['id'];
                   category.name = editcategoryName.text;
                   category.description = editcategoryDes.text;
-                  var resutl=await cateservice.updateCategory(category);
-                  if(resutl>0)
-                    {
-                      Navigator.pop(context);
-                      setState((){
-                        categorylist[_category[0]['id']-1].name=editcategoryName.text;
-                        categorylist[_category[0]['id']-1].description=editcategoryDes.text;
-
-                      });
-                    }
+                  var resutl = await cateservice.updateCategory(category);
+                  if (resutl > 0) {
+                    Navigator.pop(context);
+                    setState(() {
+                      categorylist[currentindex].name =
+                          editcategoryName.text;
+                      categorylist[currentindex].description =
+                          editcategoryDes.text;
+                      showSuccessSnackbar(Text('Update successfull'));
+                    });
+                  }
                 },
                 child: const Text('Update'),
                 color: Colors.blue,
@@ -156,11 +190,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
         });
   }
 
-
+  showSuccessSnackbar(message) {
+    var _snackbar = SnackBar(content: message);
+    _globalKey.currentState!.showSnackBar(_snackbar);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _globalKey,
       appBar: AppBar(
         leading: RaisedButton(
           onPressed: () => Navigator.of(context)
@@ -174,19 +212,25 @@ class _CategoryScreenState extends State<CategoryScreen> {
           itemCount: categorylist.length,
           itemBuilder: (context, index) {
             return Padding(
-
-              padding: const EdgeInsets.only(top: 8.0,left: 8.0,right: 8.0),
+              padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8.0),
               child: Card(
                   child: ListTile(
-                      leading:
-                          IconButton(onPressed: () {
-                            getCatebyId(context,categorylist[index].id);
-                          }, icon: Icon(Icons.edit)),
+                      leading: IconButton(
+                          onPressed: () {
+                            currentindex=index;
+                            getCatebyId(context, categorylist[index].id);
+                          },
+                          icon: Icon(Icons.edit)),
                       title: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           Text(categorylist[index].name),
-                          IconButton(onPressed: () {}, icon: Icon(Icons.delete))
+                          IconButton(
+                              onPressed: () {
+                                currentindex=index;
+                                showDeleteFormDialog(context);
+                              },
+                              icon: Icon(Icons.delete))
                         ],
                       ),
                       subtitle: Text(categorylist[index].description))),

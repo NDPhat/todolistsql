@@ -17,18 +17,25 @@ class Repository {
     var connection = await database;
     return await connection.insert(table, data);
   }
+
   readData(table) async {
     var connection = await database;
     return await connection.query(table);
   }
 
-  readDatabyId(table,itemid) async{
+  readDatabyId(table, itemid) async {
     var connection = await database;
-    return await connection.query(table,where:'id=?',whereArgs: [itemid]);
+    return await connection.query(table, where: 'id=?', whereArgs: [itemid]);
   }
 
   updateDatabyId(table, caterory) async {
     var connection = await database;
-    return await connection.update(table, caterory,where:'id=?',whereArgs: [caterory['id']]);
+    return await connection.update(
+        table, caterory, where: 'id=?', whereArgs: [caterory['id']]);
+  }
+
+  deleteDatabyId(table, itemid) async {
+    var connection = await database;
+    return await connection.rawDelete("DELETE FROM $table WHERE id=$itemid");
   }
 }

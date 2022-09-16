@@ -28,4 +28,11 @@ class CategoryService{
 
   }
 
+  deleteCatebyId(categoryId)  async{
+   return await repository.deleteDatabyId('categories',categoryId);
+
+  }
+
+
+
 }
