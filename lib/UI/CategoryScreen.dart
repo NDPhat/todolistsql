@@ -20,16 +20,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
   var category = Category();
   var cateservice = CategoryService();
   var _category;
-  var currentindex;
-
+  var deletedindex;
   List<Category> categorylist = <Category>[];
   final GlobalKey<ScaffoldState> _globalKey = GlobalKey<ScaffoldState>();
   void initState() {
     super.initState();
     getAllCate();
   }
-
   getAllCate() async {
+    categorylist=<Category>[];
     var categories = await cateservice.loadCategory();
     categories.forEach((category) {
       setState(() {
@@ -52,7 +51,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
   deleteCatebyId(BuildContext context) async {
-    cateservice.deleteCatebyId(categorylist[currentindex].id);
+    cateservice.deleteCatebyId(categorylist[deletedindex].id);
   }
 
   showFormDialog(BuildContext buildContext) {
@@ -75,9 +74,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   var resutl = await cateservice.saveCategory(category);
                   if (resutl > 0) {
                     Navigator.pop(context);
-                    setState(() {
-                      categorylist.add(category);
-                    });
+                    getAllCate();
                   }
                 },
                 child: const Text('Save'),
@@ -121,11 +118,9 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 onPressed: () {
                   deleteCatebyId(context);
                   Navigator.pop(context);
-                  setState(() {
-                    print(currentindex);
-                    categorylist.remove(currentindex);
-                    showSuccessSnackbar(Text('Delete successfull'));
-                  });
+                  showSuccessSnackbar(Text('Delete successfull'));
+                  getAllCate();
+
                 },
                 child: const Text('Delete'),
                 color: Colors.blue,
@@ -156,13 +151,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   var resutl = await cateservice.updateCategory(category);
                   if (resutl > 0) {
                     Navigator.pop(context);
-                    setState(() {
-                      categorylist[currentindex].name =
-                          editcategoryName.text;
-                      categorylist[currentindex].description =
-                          editcategoryDes.text;
-                      showSuccessSnackbar(Text('Update successfull'));
-                    });
+                    getAllCate();
                   }
                 },
                 child: const Text('Update'),
@@ -217,7 +206,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   child: ListTile(
                       leading: IconButton(
                           onPressed: () {
-                            currentindex=index;
+
                             getCatebyId(context, categorylist[index].id);
                           },
                           icon: Icon(Icons.edit)),
@@ -227,7 +216,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           Text(categorylist[index].name),
                           IconButton(
                               onPressed: () {
-                                currentindex=index;
+                                deletedindex=index;
                                 showDeleteFormDialog(context);
                               },
                               icon: Icon(Icons.delete))
