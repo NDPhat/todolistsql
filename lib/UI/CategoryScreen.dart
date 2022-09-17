@@ -70,7 +70,13 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 onPressed: () async {
                   category.name = categoryName.text;
                   category.description = categoryDes.text;
-                  category.id = categorylist.last.id + 1;
+                  if(categorylist.length==0)
+                    {
+                      category.id=1;
+                    }
+                  else {
+                    category.id = categorylist.last.id + 1;
+                  }
                   var resutl = await cateservice.saveCategory(category);
                   if (resutl > 0) {
                     Navigator.pop(context);
